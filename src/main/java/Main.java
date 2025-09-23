@@ -24,7 +24,7 @@ public class Main {
       // Wait for connection from client.
       while (true) {
         Socket clientSocket = serverSocket.accept();
-        Thread clientThread = new Thread(() -> {
+        Thread clientThread = new Thread(() -> { 
           try {
             processBuffer(clientSocket);
           } catch (Exception e) {
@@ -55,6 +55,8 @@ public class Main {
           clientOutput.write(numBytes + "\r\n" + clientInput.readLine() +
                              "\r\n");
           clientOutput.flush();
+        } else if (content.equalsIgnoreCase("set")){
+          // Implement set commend here
         }
       }
     } catch (IOException e) {
