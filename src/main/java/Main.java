@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 public class Main {
   public static void main(String[] args) {
@@ -22,6 +23,9 @@ public class Main {
       // errors
       serverSocket.setReuseAddress(true);
       // Wait for connection from client.
+
+      //HashMap to store variables
+      HashMap<String, String> map = new HashMap<>();
       while (true) {
         Socket clientSocket = serverSocket.accept();
         Thread clientThread = new Thread(() -> { 
