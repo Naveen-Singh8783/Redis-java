@@ -5,27 +5,22 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Main {
+
+  // Shared map for all clients
+  private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+
   public static void main(String[] args) {
-    // You can use print statements as follows for debugging, they'll be visible
-    // when running tests.
     System.out.println("Logs from your program will appear here!");
 
-    //  Uncomment this block to pass the first stage
     ServerSocket serverSocket = null;
     int port = 6379;
     try {
       serverSocket = new ServerSocket(port);
-      // Since the tester restarts your program quite often, setting
-      // SO_REUSEADDR ensures that we don't run into 'Address already in use'
-      // errors
       serverSocket.setReuseAddress(true);
-      // Wait for connection from client.
 
-      //HashMap to store variables
-      HashMap<String, String> map = new HashMap<>();
       while (true) {
         Socket clientSocket = serverSocket.accept();
         Thread clientThread = new Thread(() -> { 
@@ -48,19 +43,61 @@ public class Main {
              new InputStreamReader(clientSocket.getInputStream()));
          BufferedWriter clientOutput = new BufferedWriter(
              new OutputStreamWriter(clientSocket.getOutputStream()));) {
-      String content;
+      
+      String line;
+      while ((line = clientInput.readLine()) != null) {
+        String[] parts = line.trim().split(" ");
+        String command = parts[0].toUpperCase();
 
-      while ((content = clientInput.readLine()) != null) {
-        if (content.equalsIgnoreCase("ping")) {
-          clientOutput.write("+PONG\r\n");
-          clientOutput.flush();
-        } else if (content.equalsIgnoreCase("echo")) {
-          String numBytes = clientInput.readLine();
-          clientOutput.write(numBytes + "\r\n" + clientInput.readLine() +
-                             "\r\n");
-          clientOutput.flush();
-        } else if (content.equalsIgnoreCase("set")){
-          // Implement set commend here
+        switch (command) {
+          case "PING":
+            clientOutput.write("+PONG\r\n");
+            clientOutput.flush();
+            break;
+
+          case "ECHO":
+            if (parts.length > 1) {
+              String msg = line.substring(5); // everything after "echo "
+              clientOutput.write("+" + msg + "\r\n");
+              clientOutput.flush();
+            } else {
+              clientOutput.write("-ERR wrong number of arguments for 'echo'\r\n");
+              clientOutput.flush();
+            }
+            break;
+
+          case "SET":
+            if (parts.length >= 3) {
+              String key = parts[1];
+              String value = parts[2];
+              map.put(key, value);
+              clientOutput.write("+OK\r\n");
+              clientOutput.flush();
+            } else {
+              clientOutput.write("-ERR wrong number of arguments for 'set'\r\n");
+              clientOutput.flush();
+            }
+            break;
+
+          case "GET":
+            if (parts.length == 2) {
+              String key = parts[1];
+              String value = map.get(key);
+              if (value != null) {
+                clientOutput.write("$" + value.length() + "\r\n" + value + "\r\n");
+              } else {
+                clientOutput.write("$-1\r\n"); // null bulk string in Redis
+              }
+              clientOutput.flush();
+            } else {
+              clientOutput.write("-ERR wrong number of arguments for 'get'\r\n");
+              clientOutput.flush();
+            }
+            break;
+
+          default:
+            clientOutput.write("-ERR unknown command\r\n");
+            clientOutput.flush();
         }
       }
     } catch (IOException e) {
