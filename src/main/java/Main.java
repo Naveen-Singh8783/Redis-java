@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Main {
 
   // Shared map for all clients
-  private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+  private static ConcurrentHashMap<String, ValueWithExpiry> map = new ConcurrentHashMap<>();
 
   public static void main(String[] args) {
     System.out.println("Logs from your program will appear here!");
@@ -70,7 +70,32 @@ public class Main {
             if (parts.length >= 3) {
               String key = parts[1];
               String value = parts[2];
-              map.put(key, value);
+              long expiryTime = -1; //default: -1 means no expiry
+              
+              if(parts.length >= 5){
+                String option = parts[3].toUpperCase();
+                String expiryStr = parts[4];
+                try {
+                  if("EX".equals(option)){
+                      long seconds = Long.parseLong(expiryStr);
+                      expiryTime = System.currentTimeMillis() + (seconds * 100);
+                  }else if("PX".equals(option)){
+                    long millis = Long.parseLong(expiryStr);
+                    expiryTime = System.currentTimeMillis() + millis;
+                  }else{
+                    clientOutput.write("-ERR syntax error\r\n");
+                    clientOutput.flush();
+                    break;
+                  }
+                } catch (NumberFormatException e) {
+                  clientOutput.write("-ERR invalid expire time\r\n");
+                  clientOutput.flush();
+                  break;
+                }
+              }
+
+
+              map.put(key, new ValueWithExpiry(value, expiryTime));
               clientOutput.write("+OK\r\n");
               clientOutput.flush();
             } else {
