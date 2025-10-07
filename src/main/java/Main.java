@@ -107,11 +107,12 @@ public class Main {
           case "GET":
             if (parts.length == 2) {
               String key = parts[1];
-              String value = map.get(key);
-              if (value != null) {
-                clientOutput.write("$" + value.length() + "\r\n" + value + "\r\n");
+              ValueWithExpiry value = map.get(key);
+              if (value == null || value.isExpired()) {
+                map.remove(key);
+                clientOutput.write("$-1\r\n");
               } else {
-                clientOutput.write("$-1\r\n"); // null bulk string in Redis
+                clientOutput.write("$"+ value.getValue().length() + "\r\n" + value.getValue() + "\r\n"); 
               }
               clientOutput.flush();
             } else {
