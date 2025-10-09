@@ -11,9 +11,18 @@ public class Main {
 
   // Shared map for all clients
   private static ConcurrentHashMap<String, ValueWithExpiry> map = new ConcurrentHashMap<>();
+  private static String dbfilename;
+  private static String dir;
 
   public static void main(String[] args) {
     System.out.println("Logs from your program will appear here!");
+
+    //adding dir command command support and filename
+    if(args.length>0 && args[0] !=null && args[2] != null && args[0].equals("--dir") && args[2].equals("--dbfilename")){
+        dir = args[1];
+        dbfilename = args[3];
+
+    }
 
     ServerSocket serverSocket = null;
     int port = 6379;
