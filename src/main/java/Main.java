@@ -130,6 +130,23 @@ public class Main {
             }
             break;
 
+          case "CONFIG":
+            String cmd = parts[1].toUpperCase();
+            if(cmd.equals("GET")){
+              String folderOrFile = parts[2];
+              if(folderOrFile.equals("dir")){
+                clientOutput.write(dir+"\r\n");
+              }else if(folderOrFile.equals("dbfilename")){
+                clientOutput.write(dbfilename+"\r\n");
+              }else{
+                clientOutput.write("-ERR No file or directory exist with this name\r\n");
+                clientOutput.flush();
+              }
+            }else{
+              clientOutput.write("-ERR unknown command\r\n");
+              clientOutput.flush();
+            }
+
           default:
             clientOutput.write("-ERR unknown command\r\n");
             clientOutput.flush();
