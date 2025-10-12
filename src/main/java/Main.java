@@ -146,6 +146,7 @@ public class Main {
               clientOutput.write("-ERR unknown command\r\n");
               clientOutput.flush();
             }
+            break;
 
           default:
             clientOutput.write("-ERR unknown command\r\n");
